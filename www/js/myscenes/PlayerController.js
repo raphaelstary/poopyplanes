@@ -8,5 +8,9 @@ var PlayerController = (function () {
         player.forceX += xDelta;
     };
 
+    PlayerController.prototype.jump = function (player) {
+        player.forceY -= 50;
+    };
+
     return PlayerController;
 })();

@@ -38,19 +38,23 @@ var PlayGame = (function (Event, Math, PlayerController, Entity) {
         var players = {
             0: {
                 entity: createPlayer(startX, startY),
-                controls: []
+                controls: [],
+                jumpPressed: false
             },
             1: {
                 entity: createPlayer(startX, startY),
-                controls: []
+                controls: [],
+                jumpPressed: false
             },
             2: {
                 entity: createPlayer(startX, startY),
-                controls: []
+                controls: [],
+                jumpPressed: false
             },
             3: {
                 entity: createPlayer(startX, startY),
-                controls: []
+                controls: [],
+                jumpPressed: false
             }
         };
 
@@ -80,15 +84,25 @@ var PlayGame = (function (Event, Math, PlayerController, Entity) {
         };
 
         var playerController = new PlayerController();
+
         var gamePadListener = this.events.subscribe(Event.GAME_PAD, function (gamePad) {
-            var player = players[gamePad.index].entity;
-            var bufferedControls = players[gamePad.index].controls;
+            var wrapper = players[gamePad.index];
+            var player = wrapper.entity;
+            var bufferedControls = wrapper.controls;
             while (bufferedControls.length > 0)
                 bufferedControls.pop();
 
             var xDelta = Math.abs(gamePad.getLeftStickXAxis()) < 0.3 ? 0 : Math.floor(gamePad.getLeftStickXAxis());
+            if (xDelta != 0) {
+                bufferedControls.push(playerController.move.bind(playerController, player, xDelta));
+            }
 
-            bufferedControls.push(playerController.move.bind(playerController, player, xDelta));
+            if (!wrapper.jumpPressed && gamePad.isAPressed()) {
+                wrapper.jumpPressed = true;
+                playerController.jump(player);
+            } else if (wrapper.jumpPressed && !gamePad.isAPressed()) {
+                wrapper.jumpPressed = false;
+            }
 
             //if (gamePad.getRightTrigger() > 0.3) {
             //    var magnitude = Math.sqrt(gamePad.getRightStickXAxis() * gamePad.getRightStickXAxis() +
@@ -144,6 +158,7 @@ var PlayGame = (function (Event, Math, PlayerController, Entity) {
                     if (player.x + widthHalf > element.getCornerX() && player.x - widthHalf < element.getEndX() &&
                         player.y + heightHalf > element.getCornerY() && player.y - heightHalf < element.getEndY()) {
 
+                        player.x = player.lastX;
                         player.y = player.lastY;
                     }
                 });
