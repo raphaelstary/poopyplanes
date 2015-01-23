@@ -1,4 +1,4 @@
-var installMyScenes = (function (SceneManager) {
+var installMyScenes = (function (SceneManager, PlayGame) {
     "use strict";
 
     function installMyScenes(sceneServices) {
@@ -6,8 +6,12 @@ var installMyScenes = (function (SceneManager) {
 
         var sceneManager = new SceneManager();
 
+        var playGame = new PlayGame(sceneServices);
+
+        sceneManager.add(playGame.show.bind(playGame));
+
         return sceneManager;
     }
 
     return installMyScenes;
-})(SceneManager);
+})(SceneManager, PlayGame);
