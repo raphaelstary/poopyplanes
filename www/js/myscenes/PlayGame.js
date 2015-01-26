@@ -1,4 +1,4 @@
-var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors) {
+var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range) {
     "use strict";
 
     function PlayGame(services) {
@@ -9,65 +9,102 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors) {
     PlayGame.prototype.show = function (next) {
         var self = this;
 
-        var width = 1920;
-        var height = 1080;
+        var screenWidth = 1920;
+        var screenHeight = 1080;
         var tileHeight = 20;
 
-        var groundTile = this.stage.drawRectangle(width / 2, height / 2, width / 3 * 2, tileHeight, 'black');
-        var jumpTileOne = this.stage.drawRectangle(width / 3, height / 4, width / 4, tileHeight, 'black');
-        var jumpTileTwo = this.stage.drawRectangle(width / 3 * 2, height / 4, width / 4, tileHeight, 'black');
-        var baseGroundTile = this.stage.drawRectangle(width / 2, height / 4 * 3, width, tileHeight, 'black');
-        var baseFire = this.stage.drawRectangle(width / 2, height / 4 * 3 - tileHeight * 2, width / 8, tileHeight * 4,
-            'red');
+        var wallLeft = this.stage.drawRectangle(tileHeight, screenHeight / 2, tileHeight * 2, screenHeight, 'grey',
+            true);
+        var wallRight = this.stage.drawRectangle(screenWidth - tileHeight, screenHeight / 2, tileHeight * 2,
+            screenHeight, 'grey', true);
+        var wallTop = this.stage.drawRectangle(screenWidth / 2, tileHeight, screenWidth, tileHeight * 2, 'grey', true);
+        var wallBottom = this.stage.drawRectangle(screenWidth / 2, screenHeight - tileHeight, screenWidth,
+            tileHeight * 2, 'grey', true);
+        var cloud1 = this.stage.drawRectangle(screenWidth / 2, screenHeight / 6, tileHeight * 20, tileHeight * 10,
+            'grey', true);
+        var cloud2 = this.stage.drawRectangle(screenWidth / 2, screenHeight / 6 * 5, tileHeight * 20, tileHeight * 10,
+            'grey', true);
+        var cloud3 = this.stage.drawRectangle(screenWidth / 6, screenHeight / 2, tileHeight * 20, tileHeight * 10,
+            'grey', true);
+        var cloud4 = this.stage.drawRectangle(screenWidth / 6 * 5, screenHeight / 2, tileHeight * 20, tileHeight * 10,
+            'grey', true);
+
+        function createEntity(drawable) {
+            return new Entity(drawable.x, drawable.y, 0, drawable, drawable);
+        }
 
         var scenery = [
-            new Entity(groundTile.x, groundTile.y, 0, groundTile, groundTile),
-            new Entity(jumpTileOne.x, jumpTileOne.y, 0, jumpTileOne, jumpTileOne),
-            new Entity(jumpTileTwo.x, jumpTileTwo.y, 0, jumpTileTwo, jumpTileTwo),
-            new Entity(baseGroundTile.x, baseGroundTile.y, 0, baseGroundTile, baseGroundTile),
-            new Entity(baseFire.x, baseFire.y, 0, baseFire, baseFire)
+            createEntity(wallTop),
+            createEntity(wallBottom),
+            createEntity(wallLeft),
+            createEntity(wallRight),
+            createEntity(cloud1),
+            createEntity(cloud2),
+            createEntity(cloud3),
+            createEntity(cloud4)
         ];
 
-        var startX = jumpTileOne.x;
-        var startY = jumpTileOne.y - tileHeight * 3;
-        var playerWidth = tileHeight * 2;
-        var playerHeight = tileHeight * 5;
+        var startPositions = [
+            {
+                x: screenWidth / 6,
+                y: screenHeight / 6
+            },
+            {
+                x: screenWidth / 6 * 5,
+                y: screenHeight / 6
+            },
+            {
+                x: screenWidth / 6,
+                y: screenHeight / 6 * 5
+            },
+            {
+                x: screenWidth / 6 * 5,
+                y: screenHeight / 6 * 5
+            }
+        ];
 
-        var gravity = 10;
+        function getStartPosition() {
+            var randomIndex = range(0, startPositions.length - 1);
+            return startPositions.splice(randomIndex, 1).pop();
+        }
+
+        var gravity = 5;
+        //var maxAcceleration = 20;
 
         var players = {
             0: {
-                entity: createPlayer(startX, startY),
+                entity: createPlayer(getStartPosition()),
                 controls: [],
                 jumpPressed: false
             },
             1: {
-                entity: createPlayer(startX, startY),
+                entity: createPlayer(getStartPosition()),
                 controls: [],
                 jumpPressed: false
             },
             2: {
-                entity: createPlayer(startX, startY),
+                entity: createPlayer(getStartPosition()),
                 controls: [],
                 jumpPressed: false
             },
             3: {
-                entity: createPlayer(startX, startY),
+                entity: createPlayer(getStartPosition()),
                 controls: [],
                 jumpPressed: false
             }
         };
 
-        function createPlayer(x, y) {
-            var sprite = self.stage.drawRectangle(x, y, tileHeight * 2, tileHeight * 4, 'blue');
-            return new Entity(x, y, 0, sprite, sprite);
+        function createPlayer(startPosition) {
+            var sprite = self.stage.drawRectangle(startPosition.x, startPosition.y, tileHeight * 2, tileHeight,
+                'blue');
+            return new Entity(startPosition.x, startPosition.y, 0, sprite, sprite);
         }
 
         var viewPort = {
-            x: width / 2,
-            y: height / 2,
-            width: width,
-            height: height,
+            x: screenWidth / 2,
+            y: screenHeight / 2,
+            width: screenWidth,
+            height: screenHeight,
             scale: 1,
             getCornerX: function () {
                 return Math.floor(this.x - this.width * this.scale / 2);
@@ -129,7 +166,7 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors) {
                 // current - river upstream
                 forceY += gravity;
 
-                var airResistance = 0.8;
+                var airResistance = 0.9;
                 player.forceX *= airResistance;
                 player.forceY *= airResistance;
 
@@ -261,4 +298,4 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors) {
     };
 
     return PlayGame;
-})(Event, Math, PlayerController, Entity, Vectors);
+})(Event, Math, PlayerController, Entity, Vectors, range);
