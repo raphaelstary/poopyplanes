@@ -44,20 +44,19 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
             createEntity(cloud4)
         ];
 
+        var startRotation = 0; //-Math.PI / 2;
+
         var startPositions = [
             {
                 x: screenWidth / 6,
                 y: screenHeight / 6
-            },
-            {
+            }, {
                 x: screenWidth / 6 * 5,
                 y: screenHeight / 6
-            },
-            {
+            }, {
                 x: screenWidth / 6,
                 y: screenHeight / 6 * 5
-            },
-            {
+            }, {
                 x: screenWidth / 6 * 5,
                 y: screenHeight / 6 * 5
             }
@@ -73,31 +72,40 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
 
         var players = {
             0: {
-                entity: createPlayer(getStartPosition()),
+                entity: createPlayer(getStartPosition(), 0),
                 controls: [],
-                jumpPressed: false
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false
             },
             1: {
-                entity: createPlayer(getStartPosition()),
+                entity: createPlayer(getStartPosition(), 1),
                 controls: [],
-                jumpPressed: false
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false
             },
             2: {
-                entity: createPlayer(getStartPosition()),
+                entity: createPlayer(getStartPosition(), 2),
                 controls: [],
-                jumpPressed: false
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false
             },
             3: {
-                entity: createPlayer(getStartPosition()),
+                entity: createPlayer(getStartPosition(), 3),
                 controls: [],
-                jumpPressed: false
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false
             }
         };
 
-        function createPlayer(startPosition) {
-            var sprite = self.stage.drawRectangle(startPosition.x, startPosition.y, tileHeight * 2, tileHeight,
-                'blue');
-            return new Entity(startPosition.x, startPosition.y, 0, sprite, sprite);
+        function createPlayer(startPosition, id) {
+            var sprite = self.stage.drawRectangle(startPosition.x, startPosition.y, tileHeight * 2, tileHeight, 'blue');
+            var entity = new Entity(startPosition.x, startPosition.y, startRotation, sprite, sprite);
+            entity.id = id;
+            return entity;
         }
 
         var viewPort = {
@@ -119,8 +127,8 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
                 return Math.floor(this.y + this.height * this.scale / 2);
             }
         };
-
-        var playerController = new PlayerController();
+        var bullets = [];
+        var playerController = new PlayerController(bullets, this.stage, tileHeight);
 
         var gamePadListener = this.events.subscribe(Event.GAME_PAD, function (gamePad) {
             var wrapper = players[gamePad.index];
@@ -141,14 +149,12 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
                 wrapper.jumpPressed = false;
             }
 
-            //if (gamePad.getRightTrigger() > 0.3) {
-            //    var magnitude = Math.sqrt(gamePad.getRightStickXAxis() * gamePad.getRightStickXAxis() +
-            //    gamePad.getRightStickYAxis() * gamePad.getRightStickYAxis());
-            //    bufferedControls.push(
-            //        __fire.bind(null, player, gamePad.getRightStickXAxis() / magnitude * 30,
-            //            gamePad.getRightStickYAxis() / magnitude * 30)
-            //    );
-            //}
+            if (!wrapper.firePressed && gamePad.isRightTriggerPressed()) {
+                wrapper.firePressed = true;
+                playerController.shoot(player);
+            } else if (wrapper.firePressed && !gamePad.isRightTriggerPressed()) {
+                wrapper.firePressed = false;
+            }
         });
 
         var movePlayerListener = this.events.subscribe(Event.TICK_MOVE, function () {
@@ -173,20 +179,94 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
                 forceX += player.forceX;
                 forceY += player.forceY;
 
+                if (forceY < 0 && player.rotation > -Math.PI / 8) {
+                    player.rotation -= 0.02;
+                } else if (player.rotation < Math.PI / 8) {
+                    player.rotation += 0.02;
+                }
+
                 player.lastX = player.x;
                 player.lastY = player.y;
 
                 player.x += Math.round(forceX);
                 player.y += Math.round(forceY);
+
+                if (player.fireStop > 0) {
+                    player.fireStop--;
+                }
             });
         });
 
         var moveBulletsListener = this.events.subscribe(Event.TICK_MOVE, function () {
+            bullets.forEach(function (bullet) {
+                var forceX = 0;
+                var forceY = 0;
 
+                // current - river upstream
+                forceY += gravity / 2;
+
+                var airResistance = 0.99;
+                bullet.forceX *= airResistance;
+                bullet.forceY *= airResistance;
+
+                forceX += bullet.forceX;
+                forceY += bullet.forceY;
+
+                bullet.lastX = bullet.x;
+                bullet.lastY = bullet.y;
+
+                bullet.x += Math.round(forceX);
+                bullet.y += Math.round(forceY);
+            });
         });
 
+        function removeBullet(bullet, index, bulletArray) {
+            self.stage.remove(bullet.collision);
+            self.stage.remove(bullet.sprite);
+            bulletArray.splice(index, 1);
+        }
+
+        function killPlane(player, key) {
+            self.stage.remove(player.collision);
+            self.stage.remove(player.sprite);
+            delete players[key];
+        }
+
         var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, function () {
+            bullets.forEach(function (bullet, index, bulletArray) {
+                var bulletWidthHalf = bullet.collision.getWidthHalf();
+                var bulletHeightHalf = bullet.collision.getHeightHalf();
+
+                Object.keys(players).forEach(function (playerKey) {
+                    if (playerKey == bullet.shooter)
+                        return;
+
+                    var player = players[playerKey].entity;
+                    var widthHalf = player.collision.getWidthHalf();
+                    var heightHalf = player.collision.getHeightHalf();
+
+                    if (player.x + widthHalf > bullet.x - bulletWidthHalf &&
+                        player.x - widthHalf < bullet.x + bulletWidthHalf &&
+                        player.y + heightHalf > bullet.y - bulletHeightHalf &&
+                        player.y - heightHalf < bullet.y + bulletHeightHalf) {
+
+                        removeBullet(bullet, index, bulletArray);
+                        killPlane(player, playerKey);
+                    }
+                });
+            });
+
             scenery.forEach(function (element) {
+                bullets.forEach(function (bullet, index, bulletsArray) {
+                    var widthHalf = bullet.collision.getWidthHalf();
+                    var heightHalf = bullet.collision.getHeightHalf();
+                    if (bullet.x + widthHalf > element.getCornerX() && bullet.x - widthHalf < element.getEndX() &&
+                        bullet.y + heightHalf > element.getCornerY() && bullet.y - heightHalf < element.getEndY()) {
+
+                        removeBullet(bullet, index, bulletsArray);
+                    }
+                });
+
                 Object.keys(players).forEach(function (playerKey) {
                     var player = players[playerKey].entity;
 
@@ -194,6 +274,8 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
                     var heightHalf = player.collision.getHeightHalf();
                     if (player.x + widthHalf > element.getCornerX() && player.x - widthHalf < element.getEndX() &&
                         player.y + heightHalf > element.getCornerY() && player.y - heightHalf < element.getEndY()) {
+
+                        player.rotation = 0;
 
                         var elemHeightHalf = element.collision.getHeightHalf();
                         var elemWidthHalf = element.collision.getWidthHalf();
@@ -250,6 +332,9 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
         var cameraListener = this.events.subscribe(Event.TICK_CAMERA, function () {
             scenery.forEach(function (obj) {
                 calcScreenPosition(obj);
+            });
+            bullets.forEach(function (bullet) {
+                calcScreenPosition(bullet);
             });
             Object.keys(players).forEach(function (playerKey) {
                 var player = players[playerKey].entity;
