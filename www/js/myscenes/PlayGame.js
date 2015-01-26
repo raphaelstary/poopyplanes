@@ -184,6 +184,7 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
                 } else if (player.rotation < Math.PI / 8) {
                     player.rotation += 0.02;
                 }
+                player.flipHorizontally = forceX < 0;
 
                 player.lastX = player.x;
                 player.lastY = player.y;
@@ -364,6 +365,7 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
             entity.sprite.x = entity.x - viewPort.getCornerX() * viewPort.scale;
             entity.sprite.y = entity.y - viewPort.getCornerY() * viewPort.scale;
             entity.sprite.rotation = entity.rotation;
+            entity.sprite.flipHorizontally = entity.flipHorizontally;
             entity.sprite.scale *= viewPort.scale;
 
             if (entity.debug) {

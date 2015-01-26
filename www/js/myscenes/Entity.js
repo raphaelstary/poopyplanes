@@ -13,6 +13,8 @@ var Entity = (function (Math) {
         this.lastX = x;
         this.lastY = y;
         this.debug = false;
+        this.flipHorizontally = false;
+        this.flipVertically = false;
     }
 
     Entity.prototype.getCornerX = function () {
