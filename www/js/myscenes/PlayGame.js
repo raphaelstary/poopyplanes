@@ -227,10 +227,14 @@ var PlayGame = (function (Event, Math, PlayerController, Entity, Vectors, range)
             bulletArray.splice(index, 1);
         }
 
+        var ghosts = [];
+
         function killPlane(player, key) {
-            self.stage.remove(player.collision);
-            self.stage.remove(player.sprite);
+            //self.stage.remove(player.collision);
             delete players[key];
+
+            ghosts.push(player.sprite);
+            player.sprite.alpha = 0.2;
         }
 
         var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, function () {
