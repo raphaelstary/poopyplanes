@@ -9,6 +9,8 @@ var World = (function (Math, Object, Vectors) {
         this.bullets = bullets;
         this.ghosts = ghosts;
 
+        this.activePlayers = 0;
+
         this.playerController = playerController;
 
         this.camera = camera;
@@ -228,6 +230,7 @@ var World = (function (Math, Object, Vectors) {
     };
 
     World.prototype.killPlane = function (player, key) {
+        this.activePlayers--;
         //self.stage.remove(player.collision);
         delete this.players[key];
 

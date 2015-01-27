@@ -8,7 +8,7 @@ var installMyScenes = (function (SceneManager, PlayGame, SplashScreen, ChoosePla
 
         var splash = new SplashScreen(sceneServices);
         var choosePlane = new ChoosePlaneScreen(sceneServices);
-        var chooseGame = new ChooseGameScreen(sceneServices);
+        //var chooseGame = new ChooseGameScreen(sceneServices);
         var playGame = new PlayGame(sceneServices);
         var end = new EndScreen(sceneServices);
 
@@ -16,7 +16,7 @@ var installMyScenes = (function (SceneManager, PlayGame, SplashScreen, ChoosePla
         sceneManager.add(choosePlane.show.bind(choosePlane), true);
         //sceneManager.add(chooseGame.bind(chooseGame));
         sceneManager.add(playGame.show.bind(playGame));
-        //sceneManager.add(end.show.bind(end));
+        sceneManager.add(end.show.bind(end));
 
         return sceneManager;
     }

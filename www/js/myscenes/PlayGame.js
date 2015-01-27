@@ -1,4 +1,4 @@
-var PlayGame = (function (Event, createWorld) {
+var PlayGame = (function (Event, createWorld, Object) {
     "use strict";
 
     function PlayGame(services) {
@@ -21,18 +21,38 @@ var PlayGame = (function (Event, createWorld) {
         worldBuilder.createDefaultWalls();
         worldBuilder.createFirstLevel();
         worldBuilder.initPlayers(this.sceneStorage.playerColors);
+        var count = 0;
+        Object.keys(this.sceneStorage.playerColors).forEach(function (key) {
+            count++;
+        });
+        world.activePlayers = count;
 
         var gamePadListener = this.events.subscribe(Event.GAME_PAD, world.handleGamePad.bind(world));
         var movePlayerListener = this.events.subscribe(Event.TICK_MOVE, world.updatePlayerMovement.bind(world));
         var moveBulletsListener = this.events.subscribe(Event.TICK_MOVE, world.updateBulletMovement.bind(world));
-        var bulletCollisionListener = this.events.subscribe(Event.TICK_COLLISION, world.checkBulletCollision.bind(world));
+        var bulletCollisionListener = this.events.subscribe(Event.TICK_COLLISION,
+            world.checkBulletCollision.bind(world));
         var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, world.checkCollisions.bind(world));
         var cameraListener = this.events.subscribe(Event.TICK_CAMERA, world.updateCamera.bind(world));
 
-        function nextScene() {
-            if (hasEnded)
-                return;
+        var gameStateListener = this.events.subscribe(Event.TICK_CAMERA, function () {
+            if (world.activePlayers == 1) {
+                if (hasEnded)
+                    return;
+                hasEnded = true;
+                nextScene();
+            }
+        });
 
+        function nextScene() {
+            var playerKey;
+            Object.keys(world.players).forEach(function (key) {
+                playerKey = key;
+            });
+
+            self.sceneStorage.winner = self.sceneStorage.playerColors[playerKey];
+            world.nuke();
+            self.events.unsubscribe(gameStateListener);
             self.events.unsubscribe(gamePadListener);
             self.events.unsubscribe(movePlayerListener);
             self.events.unsubscribe(moveBulletsListener);
@@ -45,4 +65,4 @@ var PlayGame = (function (Event, createWorld) {
     };
 
     return PlayGame;
-})(Event, createWorld);
+})(Event, createWorld, Object);
