@@ -21,7 +21,7 @@ var PlayerController = (function (Math, Entity, Vectors) {
         if (player.fireStop > 0)
             return;
 
-        player.fireStop = 30;
+        player.fireStop = 15;
         this.worldBuilder.createBullet(player);
     };
 

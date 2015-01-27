@@ -70,7 +70,7 @@ var World = (function (Math, Object, Vectors) {
             forceY += player.forceY;
 
             if (forceY < 0 && player.rotation > -Math.PI / 8) {
-                player.rotation -= 0.02;
+                player.rotation -= 0.05;
             } else if (player.rotation < Math.PI / 8) {
                 player.rotation += 0.02;
             }
@@ -94,7 +94,7 @@ var World = (function (Math, Object, Vectors) {
             var forceY = 0;
 
             // current - river upstream
-            forceY += this.gravity / 2;
+            forceY += this.gravity;
 
             var airResistance = 0.99;
             bullet.forceX *= airResistance;
