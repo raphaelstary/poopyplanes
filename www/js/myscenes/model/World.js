@@ -18,6 +18,8 @@ var World = (function (Math, Object, Vectors) {
 
     World.prototype.handleGamePad = function (gamePad) {
         var wrapper = this.players[gamePad.index];
+        if (!wrapper)
+            return;
         var player = wrapper.entity;
         var bufferedControls = wrapper.controls;
         while (bufferedControls.length > 0)
@@ -121,7 +123,7 @@ var World = (function (Math, Object, Vectors) {
         }, this);
     };
 
-    World.prototype.checkCollisions = function () {
+    World.prototype.checkBulletCollision = function () {
         this.bullets.forEach(function (bullet, index, bulletArray) {
             var bulletWidthHalf = bullet.collision.getWidthHalf();
             var bulletHeightHalf = bullet.collision.getHeightHalf();
@@ -144,7 +146,9 @@ var World = (function (Math, Object, Vectors) {
                 }
             }, this);
         }, this);
+    };
 
+    World.prototype.checkCollisions = function () {
         this.scenery.forEach(function (element) {
             this.bullets.forEach(function (bullet, index, bulletsArray) {
                 var widthHalf = bullet.collision.getWidthHalf();
@@ -212,7 +216,6 @@ var World = (function (Math, Object, Vectors) {
                         player.y = p.y + heightHalf;
                         player.forceY = 0;
                     }
-
                 }
             }, this);
         }, this);
@@ -230,6 +233,22 @@ var World = (function (Math, Object, Vectors) {
 
         this.ghosts.push(player.sprite);
         player.sprite.alpha = 0.2;
+    };
+
+    World.prototype.nuke = function () {
+        var self = this;
+        function remove(entity) {
+            self.stage.remove(entity.collision);
+            self.stage.remove(entity.sprite);
+        }
+        Object.keys(this.players).forEach(function (playerKey) {
+            var player = this.players[playerKey].entity;
+
+            remove(player);
+        }, this);
+        this.scenery.forEach(remove);
+        this.bullets.forEach(remove);
+        this.ghosts.forEach(this.stage.remove.bind(this.stage));
     };
 
     return World;

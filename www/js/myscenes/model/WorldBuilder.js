@@ -26,6 +26,26 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
             createEntity(wallRight));
     };
 
+    WorldBuilder.prototype.createChoosePlane = function () {
+        var cloud1 = this.stage.drawRectangle(this.screenWidth / 10 * 2, this.screenHeight / 3, this.tileHeight * 5,
+            this.tileHeight * 2, 'red', true);
+        var cloud2 = this.stage.drawRectangle(this.screenWidth / 10 * 4, this.screenHeight / 3, this.tileHeight * 5,
+            this.tileHeight * 2, 'blue', true);
+        var cloud3 = this.stage.drawRectangle(this.screenWidth / 10 * 6, this.screenHeight / 3, this.tileHeight * 5,
+            this.tileHeight * 2, 'green', true);
+        var cloud4 = this.stage.drawRectangle(this.screenWidth / 10 * 8, this.screenHeight / 3, this.tileHeight * 5,
+            this.tileHeight * 2, 'black', true);
+
+        this.scenery.push(createEntity(cloud1), createEntity(cloud2), createEntity(cloud3), createEntity(cloud4));
+
+        return {
+            red: cloud1,
+            blue: cloud2,
+            green: cloud3,
+            black: cloud4
+        }
+    };
+
     WorldBuilder.prototype.createFirstLevel = function () {
         var cloud1 = this.stage.drawRectangle(this.screenWidth / 2, this.screenHeight / 6, this.tileHeight * 20,
             this.tileHeight * 10, 'grey', true);
@@ -44,9 +64,38 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
         return new Entity(drawable.x, drawable.y, 0, drawable, drawable);
     }
 
-    WorldBuilder.prototype.initPlayers = function () {
+    WorldBuilder.prototype.initPlayers = function (playerColorDict) {
         var positions = new StartPositions();
         positions.initDefaultPoints(this.screenWidth, this.screenHeight);
+
+        Object.keys(playerColorDict).forEach(function (playerKey) {
+            this.players[playerKey] = {
+                entity: this.createPlayerEntity(positions.get(), playerKey, playerColorDict[playerKey]),
+                controls: [],
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false,
+                padIndex: playerKey
+            };
+        }, this);
+    };
+
+    WorldBuilder.prototype.initDefaultPlayers = function () {
+        var positions = new StartPositions([
+            {
+                x: this.screenWidth / 2 - this.tileHeight * 2,
+                y: this.screenHeight - this.tileHeight * 4
+            }, {
+                x: this.screenWidth / 2 - this.tileHeight * 5,
+                y: this.screenHeight - this.tileHeight * 4
+            }, {
+                x: this.screenWidth / 2 + this.tileHeight * 5,
+                y: this.screenHeight - this.tileHeight * 4
+            }, {
+                x: this.screenWidth / 2 + this.tileHeight * 2,
+                y: this.screenHeight - this.tileHeight * 4
+            }
+        ]);
 
         this.players[0] = {
             entity: this.createPlayerEntity(positions.get(), 0),
@@ -85,16 +134,22 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
 
     var startRotation = 0;
 
-    WorldBuilder.prototype.createPlayerEntity = function (startPosition, id) {
-        var sprite = this.stage.drawRectangle(startPosition.x, startPosition.y, this.tileHeight * 2, this.tileHeight,
-            'blue');
+    WorldBuilder.prototype.createPlayerEntity = function (startPosition, id, color) {
+        var sprite;
+        if (color)
+            sprite = this.stage.drawRectangle(startPosition.x, startPosition.y, this.tileHeight * 2, this.tileHeight,
+                color, true); else {
+            sprite = this.stage.drawRectangle(startPosition.x, startPosition.y, this.tileHeight * 2, this.tileHeight,
+                'blue');
+        }
         var entity = new Entity(startPosition.x, startPosition.y, startRotation, sprite, sprite);
         entity.id = id;
         return entity;
     };
 
     WorldBuilder.prototype.createBullet = function (player) {
-        var bulletDrawable = this.stage.drawRectangle(player.x, player.y, this.tileHeight, this.tileHeight, 'red', true);
+        var bulletDrawable = this.stage.drawRectangle(player.x, player.y, this.tileHeight, this.tileHeight,
+            player.sprite.data.color, true);
         var bullet = new Entity(bulletDrawable.x, bulletDrawable.y, player.rotation, bulletDrawable, bulletDrawable);
         bullet.flipHorizontally = player.flipHorizontally;
         this.bullets.push(bullet);
