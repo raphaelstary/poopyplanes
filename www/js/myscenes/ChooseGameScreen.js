@@ -1,4 +1,4 @@
-var ChooseGameScreen = (function (createWorld, Event) {
+var ChooseGameScreen = (function (createWorld, Event, GameMode) {
     "use strict";
 
     function ChooseGameScreen(services) {
@@ -37,10 +37,6 @@ var ChooseGameScreen = (function (createWorld, Event) {
             }
         });
 
-        var GameMode = {
-            LAST_PLANE_FLYING: 'last_plane_flying',
-            DEATH_MATCH: 'death_match'
-        };
         var modes = {
             cloudsKill: true,
             gameMode: GameMode.LAST_PLANE_FLYING,
@@ -119,6 +115,7 @@ var ChooseGameScreen = (function (createWorld, Event) {
             'red', 8);
         var fuelOff = this.stage.drawText(clouds.fuelOn.x + tileHeight, clouds.fuelOn.y, 'fuel off', tileHeight, 'Arial',
             'black', 8);
+        var guiDrawables = [cloudsKill, friendlyClouds, gameModeLast, gameModeDeath, kills, fuelOn, fuelOff];
 
         var selectCollisions = this.events.subscribe(Event.TICK_COLLISION, function () {
             world.bullets.forEach(function (bullet, index, bulletsArray) {
@@ -154,8 +151,12 @@ var ChooseGameScreen = (function (createWorld, Event) {
         var self = this;
 
         function endScene() {
+            self.sceneStorage.gameMode = modes;
 
             world.nuke();
+
+            guiDrawables.forEach(self.stage.remove.bind(self.stage));
+
             self.events.unsubscribe(gamePadListener);
             self.events.unsubscribe(movePlayerListener);
             self.events.unsubscribe(moveBulletsListener);
@@ -169,4 +170,4 @@ var ChooseGameScreen = (function (createWorld, Event) {
     };
 
     return ChooseGameScreen;
-})(createWorld, Event);
+})(createWorld, Event, GameMode);

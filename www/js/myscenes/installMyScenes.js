@@ -14,7 +14,7 @@ var installMyScenes = (function (SceneManager, PlayGame, SplashScreen, ChoosePla
 
         sceneManager.add(splash.show.bind(splash), true);
         sceneManager.add(choosePlane.show.bind(choosePlane), true);
-        sceneManager.add(chooseGame.show.bind(chooseGame));
+        sceneManager.add(chooseGame.show.bind(chooseGame), true);
         sceneManager.add(playGame.show.bind(playGame));
         sceneManager.add(end.show.bind(end));
 

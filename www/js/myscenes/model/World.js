@@ -16,6 +16,9 @@ var World = (function (Math, Object, Vectors) {
         this.camera = camera;
 
         this.gravity = 5;
+
+        this.suicides = {};
+        this.kills = {};
     }
 
     World.prototype.handleGamePad = function (gamePad) {
@@ -145,6 +148,11 @@ var World = (function (Math, Object, Vectors) {
 
                     this.removeBullet(bullet, index, bulletArray);
                     this.killPlane(player, playerKey);
+                    if (this.kills[bullet.shooter] !== undefined) {
+                        this.kills[bullet.shooter]++;
+                    } else {
+                        this.kills[bullet.shooter] = 1;
+                    }
                 }
             }, this);
         }, this);
@@ -208,6 +216,33 @@ var World = (function (Math, Object, Vectors) {
                         player.y = p.y + heightHalf;
                         player.forceY = 0;
                     }
+                }
+            }, this);
+        }, this);
+    };
+
+    World.prototype.checkCollisionsWithCloudsKillOn = function () {
+        this.scenery.forEach(function (element) {
+            this.bullets.forEach(function (bullet, index, bulletsArray) {
+                var widthHalf = bullet.collision.getWidthHalf();
+                var heightHalf = bullet.collision.getHeightHalf();
+                if (bullet.x + widthHalf > element.getCornerX() && bullet.x - widthHalf < element.getEndX() &&
+                    bullet.y + heightHalf > element.getCornerY() && bullet.y - heightHalf < element.getEndY()) {
+
+                    this.removeBullet(bullet, index, bulletsArray);
+                }
+            }, this);
+
+            Object.keys(this.players).forEach(function (playerKey) {
+                var player = this.players[playerKey].entity;
+
+                var widthHalf = player.collision.getWidthHalf();
+                var heightHalf = player.collision.getHeightHalf();
+                if (player.x + widthHalf > element.getCornerX() && player.x - widthHalf < element.getEndX() &&
+                    player.y + heightHalf > element.getCornerY() && player.y - heightHalf < element.getEndY()) {
+
+                    this.killPlane(player, playerKey);
+                    this.suicides[playerKey] = true;
                 }
             }, this);
         }, this);

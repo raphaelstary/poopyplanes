@@ -5,6 +5,7 @@ var PlayGame = (function (Event, createWorld, Object) {
         this.stage = services.stage;
         this.events = services.events;
         this.sceneStorage = services.sceneStorage;
+        this.idCounter = 0;
     }
 
     PlayGame.prototype.show = function (next) {
@@ -14,6 +15,9 @@ var PlayGame = (function (Event, createWorld, Object) {
         var screenWidth = 1920;
         var screenHeight = 1080;
         var tileHeight = 20;
+
+        var gameMode = this.sceneStorage.gameMode;
+
         var worldWrapper = createWorld(this.stage, screenWidth, screenHeight, tileHeight);
         var world = worldWrapper.world;
         var worldBuilder = worldWrapper.worldBuilder;
@@ -32,7 +36,9 @@ var PlayGame = (function (Event, createWorld, Object) {
         var moveBulletsListener = this.events.subscribe(Event.TICK_MOVE, world.updateBulletMovement.bind(world));
         var bulletCollisionListener = this.events.subscribe(Event.TICK_COLLISION,
             world.checkBulletCollision.bind(world));
-        var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, world.checkCollisions.bind(world));
+        var wallCollisionListener = gameMode.cloudsKill ?
+            this.events.subscribe(Event.TICK_COLLISION, world.checkCollisionsWithCloudsKillOn.bind(world)) :
+            this.events.subscribe(Event.TICK_COLLISION, world.checkCollisions.bind(world));
         var cameraListener = this.events.subscribe(Event.TICK_CAMERA, world.updateCamera.bind(world));
 
         var gameStateListener = this.events.subscribe(Event.TICK_CAMERA, function () {
@@ -50,8 +56,15 @@ var PlayGame = (function (Event, createWorld, Object) {
                 playerKey = key;
             });
 
-            self.sceneStorage.winner = self.sceneStorage.playerColors[playerKey];
+            self.sceneStorage.lastMatch = {
+                id: ++self.idCounter,
+                winner: playerKey,
+                suicides: world.suicides,
+                kills: world.kills
+            };
+
             world.nuke();
+
             self.events.unsubscribe(gameStateListener);
             self.events.unsubscribe(gamePadListener);
             self.events.unsubscribe(movePlayerListener);
