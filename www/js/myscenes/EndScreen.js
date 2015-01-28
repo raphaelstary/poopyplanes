@@ -47,7 +47,7 @@ var EndScreen = (function (Event, Object, GameMode) {
         matches.forEach(addMatchScore);
 
         function addMatchScore(match) {
-            if (mode.gameMode == GameMode.LAST_PLANE_FLYING) {
+            if (mode.gameMode == GameMode.LAST_PLANE_FLYING && match.winner !== undefined) {
                 initPlayerScore(match.winner);
                 playerTotalScore[match.winner]++;
             } else if (mode.gameMode == GameMode.DEATH_MATCH) {

@@ -42,7 +42,7 @@ var PlayGame = (function (Event, createWorld, Object) {
         var cameraListener = this.events.subscribe(Event.TICK_CAMERA, world.updateCamera.bind(world));
 
         var gameStateListener = this.events.subscribe(Event.TICK_CAMERA, function () {
-            if (world.activePlayers == 1) {
+            if (world.activePlayers <= 1) {
                 if (hasEnded)
                     return;
                 hasEnded = true;
