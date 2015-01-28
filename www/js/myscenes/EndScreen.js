@@ -15,7 +15,7 @@ var EndScreen = (function () {
         var hasEnded = false;
 
         var aBtnListener = this.events.subscribe(Event.GAME_PAD, function (pad) {
-            if (!hasEnded && (pad.isAPressed() || pad.isStartPressed())) {
+            if (!hasEnded && pad.isStartPressed()) {
                 hasEnded = true;
                 endScene();
             }

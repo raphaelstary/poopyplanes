@@ -46,6 +46,33 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
         }
     };
 
+    WorldBuilder.prototype.createChooseGame = function () {
+        var cloud1 = this.stage.drawRectangle(this.screenWidth / 2, this.screenHeight / 6, this.tileHeight * 10,
+            this.tileHeight * 5, 'grey', true);
+        var cloud2_left = this.stage.drawRectangle(this.screenWidth / 2 - this.tileHeight * 10, this.screenHeight / 8 * 3, this.tileHeight * 20,
+            this.tileHeight * 10, 'grey', true);
+        var cloud2_right = this.stage.drawRectangle(this.screenWidth / 2 + this.tileHeight * 10, this.screenHeight / 8 * 3, this.tileHeight * 20,
+            this.tileHeight * 10, 'grey', true);
+        var cloud3_left = this.stage.drawRectangle(this.screenWidth / 2 - this.tileHeight * 3, this.screenHeight / 5 * 3, this.tileHeight * 6,
+            this.tileHeight * 5, 'grey', true);
+        var cloud3_right = this.stage.drawRectangle(this.screenWidth / 2 + this.tileHeight * 3, this.screenHeight / 5 * 3, this.tileHeight * 6,
+            this.tileHeight * 5, 'grey', true);
+        var cloud4 = this.stage.drawRectangle(this.screenWidth / 2, this.screenHeight / 4 * 3, this.tileHeight * 10,
+            this.tileHeight * 5, 'grey', true);
+
+        this.scenery.push(createEntity(cloud1), createEntity(cloud2_left), createEntity(cloud2_right),
+            createEntity(cloud3_left), createEntity(cloud3_right), createEntity(cloud4));
+
+        return {
+            cloudsKill: cloud1,
+            gameModeLeft: cloud2_left,
+            gameModeRight: cloud2_right,
+            killsLeft: cloud3_left,
+            killsRight: cloud3_right,
+            fuelOn: cloud4
+        }
+    };
+
     WorldBuilder.prototype.createFirstLevel = function () {
         var cloud1 = this.stage.drawRectangle(this.screenWidth / 2, this.screenHeight / 6, this.tileHeight * 20,
             this.tileHeight * 10, 'grey', true);
@@ -80,8 +107,23 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
         }, this);
     };
 
-    WorldBuilder.prototype.initDefaultPlayers = function () {
-        var positions = new StartPositions([
+    WorldBuilder.prototype.initColoredDefaultPlayers = function (playerColorDict, positionPoints) {
+        var positions = new StartPositions(positionPoints);
+
+        Object.keys(playerColorDict).forEach(function (playerKey) {
+            this.players[playerKey] = {
+                entity: this.createPlayerEntity(positions.get(), playerKey, playerColorDict[playerKey]),
+                controls: [],
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false,
+                padIndex: playerKey
+            };
+        }, this);
+    };
+
+    WorldBuilder.prototype.getDefaultMenuPositionPoints = function () {
+        return [
             {
                 x: this.screenWidth / 2 - this.tileHeight * 2,
                 y: this.screenHeight - this.tileHeight * 4
@@ -95,41 +137,22 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
                 x: this.screenWidth / 2 + this.tileHeight * 2,
                 y: this.screenHeight - this.tileHeight * 4
             }
-        ]);
+        ];
+    };
 
-        this.players[0] = {
-            entity: this.createPlayerEntity(positions.get(), 0),
-            controls: [],
-            jumpPressed: false,
-            fireStop: 0,
-            firePressed: false,
-            padIndex: 0
-        };
+    WorldBuilder.prototype.initDefaultPlayers = function (positionPoints) {
+        var positions = new StartPositions(positionPoints);
 
-        this.players[1] = {
-            entity: this.createPlayerEntity(positions.get(), 1),
-            controls: [],
-            jumpPressed: false,
-            fireStop: 0,
-            firePressed: false,
-            padIndex: 1
-        };
-        this.players[2] = {
-            entity: this.createPlayerEntity(positions.get(), 2),
-            controls: [],
-            jumpPressed: false,
-            fireStop: 0,
-            firePressed: false,
-            padIndex: 2
-        };
-        this.players[3] = {
-            entity: this.createPlayerEntity(positions.get(), 3),
-            controls: [],
-            jumpPressed: false,
-            fireStop: 0,
-            firePressed: false,
-            padIndex: 3
-        };
+        [0, 1, 2, 3].forEach(function (num) {
+            this.players[num] = {
+                entity: this.createPlayerEntity(positions.get(), num),
+                controls: [],
+                jumpPressed: false,
+                fireStop: 0,
+                firePressed: false,
+                padIndex: num
+            };
+        }, this);
     };
 
     var startRotation = 0;
@@ -148,7 +171,7 @@ var WorldBuilder = (function (Entity, StartPositions, Vectors) {
     };
 
     WorldBuilder.prototype.createBullet = function (player) {
-        var bulletDrawable = this.stage.drawRectangle(player.x, player.y, this.tileHeight, this.tileHeight,
+        var bulletDrawable = this.stage.drawRectangle(player.x, player.y - 5, this.tileHeight, this.tileHeight,
             player.sprite.data.color, true);
         var bullet = new Entity(bulletDrawable.x, bulletDrawable.y, player.rotation, bulletDrawable, bulletDrawable);
         bullet.flipHorizontally = player.flipHorizontally;

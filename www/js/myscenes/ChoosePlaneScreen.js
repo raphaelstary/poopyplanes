@@ -19,7 +19,7 @@ var ChoosePlaneScreen = (function (Event, createWorld) {
         var worldBuilder = worldWrapper.worldBuilder;
         worldBuilder.createDefaultWalls();
         var colorClouds = worldBuilder.createChoosePlane();
-        worldBuilder.initDefaultPlayers();
+        worldBuilder.initDefaultPlayers(worldBuilder.getDefaultMenuPositionPoints());
 
         var gamePadListener = this.events.subscribe(Event.GAME_PAD, world.handleGamePad.bind(world));
         var movePlayerListener = this.events.subscribe(Event.TICK_MOVE, world.updatePlayerMovement.bind(world));
