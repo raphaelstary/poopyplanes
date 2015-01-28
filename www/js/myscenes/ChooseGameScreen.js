@@ -25,7 +25,7 @@ var ChooseGameScreen = (function (createWorld, Event) {
         var gamePadListener = this.events.subscribe(Event.GAME_PAD, world.handleGamePad.bind(world));
         var movePlayerListener = this.events.subscribe(Event.TICK_MOVE, world.updatePlayerMovement.bind(world));
         var moveBulletsListener = this.events.subscribe(Event.TICK_MOVE, world.updateBulletMovement.bind(world));
-        var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, world.checkCollisions.bind(world));
+        var wallCollisionListener = this.events.subscribe(Event.TICK_COLLISION, world.checkJustPlayerCollisions.bind(world));
         var cameraListener = this.events.subscribe(Event.TICK_CAMERA, world.updateCamera.bind(world));
 
         var aBtnListener = this.events.subscribe(Event.GAME_PAD, function (pad) {
@@ -50,43 +50,95 @@ var ChooseGameScreen = (function (createWorld, Event) {
 
         function toggleCloudsKill() {
             modes.cloudsKill = !modes.cloudsKill;
+
+            if (modes.cloudsKill) {
+                setActive(cloudsKill);
+                setInActive(friendlyClouds);
+            } else {
+                setInActive(cloudsKill);
+                setActive(friendlyClouds);
+            }
         }
 
         function gameModeLeft() {
             modes.gameMode = GameMode.LAST_PLANE_FLYING;
+            setActive(gameModeLast);
+            setInActive(gameModeDeath);
         }
 
         function gameModeRight() {
             modes.gameMode = GameMode.DEATH_MATCH;
+            setInActive(gameModeLast);
+            setActive(gameModeDeath);
         }
 
         function killsLeft() {
             if (modes.kills > 1) {
                 modes.kills--;
+                kills.data.msg = modes.kills.toString();
             }
         }
 
         function killsRight() {
             modes.kills++;
+            kills.data.msg = modes.kills.toString();
         }
 
         function toggleFuelOn() {
             modes.fuelOn = !modes.fuelOn;
+            if (modes.fuelOn) {
+                setActive(fuelOn);
+                setInActive(fuelOff);
+            } else {
+                setInActive(fuelOn);
+                setActive(fuelOff);
+            }
         }
 
+        function setActive(drawable) {
+            drawable.data.size = tileHeight * 1.5;
+            drawable.data.color = 'red';
+        }
+
+        function setInActive(drawable) {
+            drawable.data.size = tileHeight;
+            drawable.data.color = 'black';
+        }
+
+        var cloudsKill = this.stage.drawText(clouds.cloudsKill.x - tileHeight, clouds.cloudsKill.y, 'clouds kill', tileHeight * 1.5, 'Arial',
+            'red', 8);
+        var friendlyClouds = this.stage.drawText(clouds.cloudsKill.x + tileHeight, clouds.cloudsKill.y, 'friedly clouds', tileHeight, 'Arial',
+            'black', 8);
+        var gameModeLast = this.stage.drawText(clouds.gameModeLeft.x, clouds.gameModeLeft.y, 'last plane flying', tileHeight * 1.5, 'Arial',
+            'red', 8);
+        var gameModeDeath = this.stage.drawText(clouds.gameModeRight.x, clouds.gameModeRight.y, 'death match', tileHeight, 'Arial',
+            'black', 8);
+        var kills = this.stage.drawText(clouds.killsLeft.x, clouds.killsLeft.y, modes.kills.toString(), tileHeight, 'Arial',
+            'black', 8);
+        var fuelOn = this.stage.drawText(clouds.fuelOn.x - tileHeight, clouds.fuelOn.y, 'fuel on', tileHeight * 1.5, 'Arial',
+            'red', 8);
+        var fuelOff = this.stage.drawText(clouds.fuelOn.x + tileHeight, clouds.fuelOn.y, 'fuel off', tileHeight, 'Arial',
+            'black', 8);
+
         var selectCollisions = this.events.subscribe(Event.TICK_COLLISION, function () {
-            world.bullets.forEach(function (bullet) {
+            world.bullets.forEach(function (bullet, index, bulletsArray) {
                 if (changeSelection(bullet, clouds.cloudsKill)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     toggleCloudsKill();
                 } else if (changeSelection(bullet, clouds.gameModeLeft)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     gameModeLeft();
                 } else if (changeSelection(bullet, clouds.gameModeRight)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     gameModeRight();
                 } else if (changeSelection(bullet, clouds.killsLeft)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     killsLeft();
                 } else if (changeSelection(bullet, clouds.killsRight)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     killsRight();
                 } else if (changeSelection(bullet, clouds.fuelOn)) {
+                    world.removeBullet(bullet, index, bulletsArray);
                     toggleFuelOn();
                 }
             });

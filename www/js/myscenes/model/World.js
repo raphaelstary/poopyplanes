@@ -150,6 +150,69 @@ var World = (function (Math, Object, Vectors) {
         }, this);
     };
 
+    World.prototype.checkJustPlayerCollisions = function () {
+        this.scenery.forEach(function (element) {
+            Object.keys(this.players).forEach(function (playerKey) {
+                var player = this.players[playerKey].entity;
+
+                var widthHalf = player.collision.getWidthHalf();
+                var heightHalf = player.collision.getHeightHalf();
+                if (player.x + widthHalf > element.getCornerX() && player.x - widthHalf < element.getEndX() &&
+                    player.y + heightHalf > element.getCornerY() && player.y - heightHalf < element.getEndY()) {
+
+                    player.rotation = 0;
+
+                    var elemHeightHalf = element.collision.getHeightHalf();
+                    var elemWidthHalf = element.collision.getWidthHalf();
+                    var b4_y = element.y + elemHeightHalf;
+                    var b1_y = element.y - elemHeightHalf;
+                    var b4_x = element.x - elemWidthHalf;
+                    var b1_x = b4_x;
+                    var b2_x = element.x + elemWidthHalf;
+                    var b3_x = b2_x;
+                    var b2_y = b1_y;
+                    var b3_y = b4_y;
+
+                    var p;
+
+                    // Now compare them to know the side of collision
+                    if (player.lastX + widthHalf <= element.x - elemWidthHalf &&
+                        player.x + widthHalf > element.x - elemWidthHalf) {
+
+                        // Collision on right side of player
+                        p = Vectors.getIntersectionPoint(player.lastX + widthHalf, player.lastY,
+                            player.x + widthHalf, player.y, b1_x, b1_y, b4_x, b4_y);
+                        player.x = p.x - widthHalf;
+                        player.forceX = 0;
+
+                    } else if (player.lastX - widthHalf >= element.x + elemWidthHalf &&
+                        player.x - widthHalf < element.x + elemWidthHalf) {
+
+                        // Collision on left side of player
+                        p = Vectors.getIntersectionPoint(player.lastX - widthHalf, player.lastY,
+                            player.x - widthHalf, player.y, b2_x, b2_y, b3_x, b3_y);
+                        player.x = p.x + widthHalf;
+                        player.forceX = 0;
+                    } else if (player.lastY + heightHalf <= element.y - elemHeightHalf &&
+                        player.y + heightHalf > element.y - elemHeightHalf) {
+
+                        // Collision on bottom side of player
+                        p = Vectors.getIntersectionPoint(player.lastX, player.lastY + heightHalf, player.x,
+                            player.y + heightHalf, b1_x, b1_y, b2_x, b2_y);
+                        player.y = p.y - heightHalf;
+                        player.forceY = 0;
+                    } else {
+                        // Collision on top side of player
+                        p = Vectors.getIntersectionPoint(player.lastX, player.lastY - heightHalf, player.x,
+                            player.y - heightHalf, b3_x, b3_y, b4_x, b4_y);
+                        player.y = p.y + heightHalf;
+                        player.forceY = 0;
+                    }
+                }
+            }, this);
+        }, this);
+    };
+
     World.prototype.checkCollisions = function () {
         this.scenery.forEach(function (element) {
             this.bullets.forEach(function (bullet, index, bulletsArray) {
