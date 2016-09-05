@@ -1,4 +1,4 @@
-var SplashScreen = (function () {
+var SplashScreen = (function (Event) {
     "use strict";
 
     function SplashScreen(services) {
@@ -46,4 +46,4 @@ var SplashScreen = (function () {
     };
 
     return SplashScreen;
-})();
+})(Event);
